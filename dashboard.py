@@ -26,17 +26,21 @@ st_autorefresh(interval=300000, key="refresh")
 
 # === FETCH WALLET HOLDINGS ===
 def get_wallet_holdings(wallet_address):
-    try:
-        account_info = algod_client.account_info(wallet_address)
-        holdings = {
-            asset['asset-id']: asset['amount']
-            for asset in account_info.get('assets', [])
-            if asset['amount'] > 0
-        }
-        return holdings
-    except Exception as e:
-        st.error(f"Error fetching wallet data: {e}")
-        return {}
+    info = algod_client.account_info(wallet_address)
+
+    # Include all ASAs
+    holdings = {
+        a['asset-id']: a['amount']
+        for a in info.get('assets', [])
+        if a['amount'] > 0
+    }
+
+    # ✅ Add native ALGO balance (asset ID 0)
+    algo_amount = info.get("amount", 0)
+    holdings[0] = algo_amount
+
+    return holdings
+
 
 # === PORTFOLIO VALUE ===
 def fetch_portfolio(wallet_address):
